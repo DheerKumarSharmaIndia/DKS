@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonebook</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            animation: slideInUp 0.5s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4caf50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        input[type="text"],
+        input[type="tel"] {
+            width: calc(100% - 10px);
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-btn {
+            margin-left: 10px;
+            background-color: #f44336;
+            transition: background-color 0.3s;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Theme styles */
+        .dark-mode {
+            --bg-color: #333;
+            --text-color: grey;
+        }
+
+        .blue-mode {
+            --bg-color: #2196F3;
+            --text-color: grey;
+        }
+
+        .pink-mode {
+            --bg-color: #E91E63;
+            --text-color: grey;
+        }
+
+        .brown-mode {
+            --bg-color: brown;
+            --text-color: grey;
+        }
+
+        .black-mode {
+            --bg-color: black;
+            --text-color: grey;
+        }
+
+        .violet-mode {
+            --bg-color: violet;
+            --text-color: grey;
+        }
+
+        .light-mode {
+            --bg-color: white;
+            --text-color: black;
+        }
+
+        .search-bar {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+
+        .search-bar input[type="text"] {
+            width: calc(100% - 10px);
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #searchInput{
+            position: relative;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Phonebook</h1>
+        <input type="text" id="name" placeholder="Name">
+        <input type="tel" id="phone" placeholder="Phone Number">
+        <input type="text" id="address" placeholder="Address">
+        <input type="text" id="fatherName" placeholder="Father's Name">
+        <br /><br />
+        <button onclick="addContact()">Add Contact</button>
+        <button onclick="downloadContacts()">Download Contacts</button>
+        <button onclick="downloadContactsAsText()">Download Contacts as Text</button>
+        <button onclick="toggleTheme()">Toggle Theme</button>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search contacts" onkeyup="searchContacts()">
+        </div>
+        <ul id="contacts"></ul>
+
+    </div>
+
+    <script>
+        const themes = ['dark-mode', 'blue-mode', 'pink-mode', 'brown-mode', 'black-mode', 'violet-mode', 'light-mode'];
+        let currentThemeIndex = 0;
+
+        const contactsList = document.getElementById("contacts");
+
+        // Load contacts from localStorage on page load
+        document.addEventListener("DOMContentLoaded", loadContacts);
+
+        function addContact() {
+            const nameInput = document.getElementById("name");
+            const phoneInput = document.getElementById("phone");
+            const addressInput = document.getElementById("address");
+            const fatherNameInput = document.getElementById("fatherName");
+
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const address = addressInput.value.trim();
+            const fatherName = fatherNameInput.value.trim();
+
+            if (name === "" || phone === "") {
+                alert("Please enter name and phone number.");
+                return;
+            }
+
+            const contactItem = document.createElement("li");
+            contactItem.textContent = `Name: ${name}, Phone: ${phone}, Address: ${address}, Father's Name: ${fatherName}`;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.className = "delete-btn";
+            deleteButton.onclick = function() {
+                deleteContact(name, phone);
+                contactsList.removeChild(contactItem);
+            };
+
+            contactItem.appendChild(deleteButton);
+            contactsList.appendChild(contactItem);
+
+            saveContact(name, phone, address, fatherName);
+
+            nameInput.value = "";
+            phoneInput.value = "";
+            addressInput.value = "";
+            fatherNameInput.value = "";
+        }
+
+        function saveContact(name, phone, address, fatherName) {
+            let contacts = localStorage.getItem("contacts");
+            if (!contacts) {
+                contacts = [];
+            } else {
+                contacts = JSON.parse(contacts);
+            }
+
+            contacts.push({
+                name,
+                phone,
+                address,
+                fatherName
+            });
+            localStorage.setItem("contacts", JSON.stringify(contacts));
+        }
+
+        function loadContacts() {
+            let contacts = localStorage.getItem("contacts");
+            if (contacts) {
+                contacts = JSON.parse(contacts);
+                contacts.forEach(contact => {
+                    const contactItem = document.createElement("li");
+                    contactItem.textContent = `Name: ${contact.name}, Phone: ${contact.phone}, Address: ${contact.address}, Father's Name: ${contact.fatherName}`;
+
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "Delete";
+                    deleteButton.className = "delete-btn";
+                    deleteButton.onclick = function() {
+                        deleteContact(contact.name, contact.phone);
+                        contactsList.removeChild(contactItem);
+                    };
+
+                    contactItem.appendChild(deleteButton);
+                    contactsList.appendChild(contactItem);
+                });
+            }
+        }
+
+        function deleteContact(name, phone) {
+            let contacts = localStorage.getItem("contacts");
+            if (contacts) {
+                contacts = JSON.parse(contacts);
+                const index = contacts.findIndex(contact => contact.name === name && contact.phone === phone);
+                if (index !== -1) {
+                    contacts.splice(index, 1);
+                    localStorage.setItem("contacts", JSON.stringify(contacts));
+                }
+            }
+        }
+
+        function downloadContacts() {
+            let contacts = localStorage.getItem("contacts");
+            if (contacts) {
+                const data = JSON.parse(contacts).map(contact => {
+                    return {
+                        "Name": contact.name,
+                        "Phone": contact.phone,
+                        "Address": contact.address,
+                        "Father's Name": contact.fatherName
+                    };
+                });
+
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
+                XLSX.writeFile(workbook, "contacts.xlsx");
+            }
+        }
+
+        function downloadContactsAsText() {
+            let contacts = localStorage.getItem("contacts");
+            if (contacts) {
+                const data = JSON.parse(contacts).map(contact => {
+                    return `${contact.name}, ${contact.phone}, ${contact.address}, ${contact.fatherName}`;
+                });
+                const textContent = data.join("\n");
+
+                const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "contacts.txt";
+                link.click();
+            }
+        }
+
+        function toggleTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            const body = document.body;
+            body.className = themes[currentThemeIndex];
+        }
+
+        function searchContacts() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toUpperCase();
+            const ul = document.getElementById("contacts");
+            const lis = ul.getElementsByTagName("li");
+            for (let i = 0; i < lis.length; i++) {
+                const name = lis[i].textContent || lis[i].innerText;
+                if (name.toUpperCase().indexOf(filter) > -1) {
+                    lis[i].style.display = "";
+                } else {
+                    lis[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+    <script src="xlsx.full.min.js"></script>
+</body>
+</html>
